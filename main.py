@@ -13,7 +13,7 @@ SLIDE_WIDTH = 1920
 SLIDE_HEIGHT = 1080
 
 # Design Doc Colors (Ground Mode)
-LAMP_BLACK = "#0A0A0A"
+LAMP_BLACK = "#000000"
 BONE = "#F0EBE3"
 WET_CONCRETE = "#2A2826"
 
@@ -118,7 +118,7 @@ def generate_image(file1, file2=None, lines1=None, lines2=None, output="slide.pn
             }}
             .code-block {{
                 flex: 1;
-                background-color: {bg};
+                background-color: {bg} !important;
                 border: 1px solid {border};
                 padding: 40px;
                 overflow: hidden;
@@ -126,6 +126,9 @@ def generate_image(file1, file2=None, lines1=None, lines2=None, output="slide.pn
                 flex-direction: column;
                 justify-content: center;
                 position: relative;
+            }}
+            .code-block .highlight, .code-block pre {{
+                background-color: transparent !important;
             }}
             
             {pygments_css}

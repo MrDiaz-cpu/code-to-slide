@@ -53,7 +53,8 @@ def calculate_font_size(code, is_side_by_side=False):
     if not lines:
         return 32
 
-    max_line_len = max(len(line) for line in lines)
+    # Add 5 to max_line_len to account for the line number prefix (e.g. " 10  ")
+    max_line_len = max(len(line) for line in lines) + 5
     line_count = len(lines)
 
     avail_width = (SLIDE_WIDTH / 2 - 160) if is_side_by_side else (SLIDE_WIDTH - 200)
@@ -68,20 +69,23 @@ def calculate_font_size(code, is_side_by_side=False):
 def generate_image(file1, file2=None, lines1=None, lines2=None, output="slide.png"):
     code1 = process_code(file1, lines1)
     lexer1 = get_lexer(file1, code1)
+    lang1_name = lexer1.name if lexer1 else "Text"
     
     is_sbs = file2 is not None
     font_size1 = calculate_font_size(code1, is_sbs)
     
-    formatter = HtmlFormatter(style='dracula', nowrap=True)
+    formatter = HtmlFormatter(style='dracula', nowrap=False, linenos='inline')
     pygments_css = formatter.get_style_defs('.code-block')
     
     highlighted1 = highlight(code1, lexer1, formatter)
     
     highlighted2 = ""
     font_size2 = 32
+    lang2_name = ""
     if file2:
         code2 = process_code(file2, lines2)
         lexer2 = get_lexer(file2, code2)
+        lang2_name = lexer2.name if lexer2 else "Text"
         font_size2 = calculate_font_size(code2, is_sbs)
         highlighted2 = highlight(code2, lexer2, formatter)
 
@@ -130,6 +134,25 @@ def generate_image(file1, file2=None, lines1=None, lines2=None, output="slide.pn
             .code-block .highlight, .code-block pre {{
                 background-color: transparent !important;
             }}
+            .watermark {{
+                position: absolute;
+                bottom: 20px;
+                right: 30px;
+                font-size: 28px;
+                font-weight: 600;
+                color: rgba(255, 255, 150, 0.4); /* Light transparent yellow */
+                text-transform: uppercase;
+                letter-spacing: 3px;
+                pointer-events: none;
+            }}
+            .linenos {{
+                color: {border};
+                opacity: 0.7;
+                padding-right: 20px;
+                user-select: none;
+                text-align: right;
+                display: inline-block;
+            }}
             
             {pygments_css}
             
@@ -148,7 +171,8 @@ def generate_image(file1, file2=None, lines1=None, lines2=None, output="slide.pn
     <body>
         <div class="container">
             <div class="code-block code1">
-                <pre><code>{h1}</code></pre>
+                {h1}
+                <div class="watermark">{lang1}</div>
             </div>
             {sbs_html}
         </div>
@@ -156,7 +180,7 @@ def generate_image(file1, file2=None, lines1=None, lines2=None, output="slide.pn
     </html>
     """
     
-    sbs_html = f'<div class="code-block code2"><pre><code>{highlighted2}</code></pre></div>' if file2 else ""
+    sbs_html = f'<div class="code-block code2">{highlighted2}<div class="watermark">{lang2_name}</div></div>' if file2 else ""
     
     html_content = html_template.format(
         width=SLIDE_WIDTH,
@@ -168,6 +192,7 @@ def generate_image(file1, file2=None, lines1=None, lines2=None, output="slide.pn
         fs1=font_size1,
         fs2=font_size2,
         h1=highlighted1,
+        lang1=lang1_name,
         sbs_html=sbs_html
     )
 
